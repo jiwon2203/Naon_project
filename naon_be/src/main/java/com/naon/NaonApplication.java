@@ -1,0 +1,13 @@
+package com.naon;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class NaonApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(NaonApplication.class, args);
+	}
+
+}

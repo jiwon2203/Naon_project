@@ -1,0 +1,2363 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>혼행족 - 혼자 여행하는 사람들을 위한 앱</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .mobile-container {
+            max-width: 375px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .status-bar {
+            height: 44px;
+            background: #000;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 375px;
+            height: 83px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: 20px;
+            z-index: 100;
+        }
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-item.active {
+            color: #3b82f6;
+        }
+        .tab-item i {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        .tab-item span {
+            font-size: 10px;
+            font-weight: 500;
+        }
+        .screen {
+            display: none;
+            padding-bottom: 100px;
+        }
+        .screen.active {
+            display: block;
+        }
+        .safety-gauge {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        .emergency-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 20px;
+            position: fixed;
+            bottom: 110px;
+            right: 20px;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+            z-index: 99;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .search-bar {
+            background: #f3f4f6;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 16px;
+            width: 100%;
+            font-size: 16px;
+        }
+        .filter-chip {
+            display: inline-block;
+            background: #e5e7eb;
+            color: #374151;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-chip.active {
+            background: #dbeafe;
+            color: #3b82f6;
+        }
+        .place-card {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .place-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .place-image {
+            width: 80px;
+            height: 80px;
+            background: #e5e7eb;
+            border-radius: 8px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #9ca3af;
+        }
+        .rating-stars {
+            color: #fbbf24;
+        }
+        .safety-indicator {
+            display: inline-flex;
+            align-items: center;
+            background: #dcfce7;
+            color: #166534;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .safety-indicator.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .safety-indicator.danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .map-container {
+            height: 300px;
+            background: #e5e7eb;
+            border-radius: 12px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 16px 0;
+            overflow: hidden;
+        }
+        .map-marker {
+            position: absolute;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .map-marker:hover {
+            transform: scale(1.1);
+        }
+        .map-marker.cctv {
+            background: #3b82f6;
+        }
+        .map-marker.police {
+            background: #10b981;
+        }
+        .map-marker.light {
+            background: #f59e0b;
+        }
+        .map-marker.convenience {
+            background: #8b5cf6;
+        }
+        .map-marker.hospital {
+            background: #ef4444;
+        }
+        .map-marker.toilet {
+            background: #06b6d4;
+        }
+        .hotel-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 12px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .hotel-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .hotel-image {
+            height: 150px;
+            background: linear-gradient(45deg, #e5e7eb, #d1d5db);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #9ca3af;
+        }
+        .route-input {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        .route-option {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .route-option.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .route-option.safe {
+            border-left: 4px solid #10b981;
+        }
+        .route-option.fast {
+            border-left: 4px solid #f59e0b;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 375px;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: absolute;
+            bottom: 0;
+        }
+        .map-toggle {
+            display: flex;
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 4px;
+            margin: 16px 0;
+        }
+        .map-toggle button {
+            flex: 1;
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .map-toggle button.active {
+            background: white;
+            color: #3b82f6;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .back-button {
+            background: none;
+            border: none;
+            color: #3b82f6;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .back-button:hover {
+            color: #2563eb;
+        }
+        .recommendation-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .recommendation-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .recommendation-image {
+            height: 120px;
+            background: linear-gradient(45deg, #e5e7eb, #d1d5db);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: #9ca3af;
+            margin-bottom: 12px;
+        }
+        .difficulty-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .difficulty-easy {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .difficulty-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .difficulty-hard {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .clickable-recommendation {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .clickable-recommendation:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+        }
+        
+        /* Profile Dropdown Styles */
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 280px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            z-index: 150;
+            transform: translateY(8px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .profile-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .profile-dropdown::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            right: 16px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            transform: rotate(45deg);
+            box-shadow: -2px -2px 5px rgba(0,0,0,0.1);
+        }
+        .profile-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .profile-menu {
+            padding: 8px 0;
+        }
+        .profile-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+        .profile-menu-item:hover {
+            background: #f3f4f6;
+        }
+        .profile-menu-item i {
+            width: 20px;
+            margin-right: 12px;
+            color: #6b7280;
+        }
+        .profile-btn {
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .profile-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* 숙소 유형 탭 스타일 */
+        .accommodation-tabs {
+            display: flex;
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 4px;
+            margin: 16px 0;
+        }
+        .accommodation-tab {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #6b7280;
+        }
+        .accommodation-tab.active {
+            background: white;
+            color: #3b82f6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* 숙소 카드 개선 */
+        .accommodation-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 12px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .accommodation-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .accommodation-image {
+            height: 160px;
+            background: linear-gradient(45deg, #e5e7eb, #d1d5db);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #9ca3af;
+            position: relative;
+        }
+        .accommodation-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .accommodation-info {
+            padding: 16px;
+        }
+        .accommodation-features {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 8px 0;
+        }
+        .feature-icon {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .feature-icon i {
+            margin-right: 4px;
+            font-size: 14px;
+        }
+        .price-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .accommodation-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin: 8px 0;
+        }
+        .accommodation-tag {
+            background: #f3f4f6;
+            color: #6b7280;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+        .accommodation-tag.highlight {
+            background: #dbeafe;
+            color: #3b82f6;
+        }
+
+        /* Navigation Screen Styles */
+        .navigation-screen {
+            background: #1a1a1a;
+            color: white;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .navigation-header {
+            background: #000;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navigation-map {
+            height: 400px;
+            background: linear-gradient(135deg, #2d3748, #4a5568);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .route-line {
+            position: absolute;
+            width: 4px;
+            background: #3b82f6;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        .current-location {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #10b981;
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+            animation: locationPulse 2s infinite;
+        }
+        @keyframes locationPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        .destination-marker {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #ef4444;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .destination-marker i {
+            transform: rotate(45deg);
+            color: white;
+            font-size: 14px;
+        }
+        .navigation-info {
+            background: white;
+            color: #1a1a1a;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            margin-top: -20px;
+            position: relative;
+            z-index: 10;
+        }
+        .direction-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            border-left: 4px solid #3b82f6;
+        }
+        .direction-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+        .safety-alerts {
+            background: #dcfce7;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+        }
+        .safety-alerts.warning {
+            background: #fef3c7;
+            border-color: #fde68a;
+        }
+        .navigation-controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .nav-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .nav-btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .arrival-screen {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .arrival-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 1s ease-in-out infinite alternate;
+        }
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+        .step-number {
+            background: #3b82f6;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .step-current {
+            background: #10b981;
+            animation: pulse 1.5s infinite;
+        }
+        .step-completed {
+            background: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>혼행족</span>
+            <div>
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi ml-1"></i>
+                <i class="fas fa-battery-full ml-1"></i>
+            </div>
+        </div>
+
+        <!-- Home Screen -->
+        <div id="home" class="screen active">
+            <div class="p-4">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">안녕하세요, 지은님</h1>
+                        <p class="text-gray-600">오늘도 안전한 혼행 되세요 ✨</p>
+                    </div>
+                    <div class="relative">
+                        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold profile-btn" onclick="toggleProfileDropdown()">
+                            지
+                        </div>
+                        <!-- Profile Dropdown -->
+                        <div id="profileDropdown" class="profile-dropdown">
+                            <div class="profile-header">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-lg font-bold mr-3">
+                                        지
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">김지은</h3>
+                                        <p class="text-sm text-gray-600">jieun.kim@email.com</p>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    ID: jieun_traveler
+                                </div>
+                            </div>
+                            <div class="profile-menu">
+                                <button class="profile-menu-item" onclick="showProfileEdit()">
+                                    <i class="fas fa-user-edit"></i>
+                                    <span>프로필 변경</span>
+                                </button>
+                                <button class="profile-menu-item" onclick="showPasswordChange()">
+                                    <i class="fas fa-key"></i>
+                                    <span>비밀번호 변경</span>
+                                </button>
+                                <button class="profile-menu-item" onclick="showHelp()">
+                                    <i class="fas fa-question-circle"></i>
+                                    <span>도움말</span>
+                                </button>
+                                <button class="profile-menu-item" onclick="logout()" style="color: #ef4444;">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>로그아웃</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Safety Status (Weather Version) -->
+                <div class="card bg-gradient-to-r from-green-50 to-blue-50 border-l-4 border-green-500">
+                    <div class="flex items-center gap-6">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-gray-800">현재 위치 날씨</h3>
+                            <p class="text-sm text-gray-600">부산 해운대구</p>
+                        </div>
+                        <!-- 날씨 정보 -->
+                        <div class="weather-info flex flex-col items-center justify-center text-blue-600 flex-none">
+                            <i class="fas fa-sun text-4xl mb-1"></i>
+                            <span class="text-xl font-semibold">27°C</span>
+                            <span class="text-sm text-gray-500">맑음</span>
+                            <span class="text-xs text-gray-500">습도 60%</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-between text-sm">
+                        <div class="flex items-center">
+                            <i class="fas fa-video text-blue-500 mr-1"></i>
+                            <span>CCTV 5개</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
+                            <span>조명 양호</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-shield-alt text-green-500 mr-1"></i>
+                            <span>경찰서 200m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Today's Recommendations -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">
+                        <i class="fas fa-star text-yellow-500 mr-2"></i>
+                        오늘의 혼행 추천
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center p-3 bg-blue-50 rounded-lg clickable-recommendation" onclick="showWalkingRoutes()">
+                            <i class="fas fa-walking text-blue-500 text-xl mr-3"></i>
+                            <div>
+                                <p class="font-semibold">산책 코스 추천</p>
+                                <p class="text-sm text-gray-600">날씨 맑음, 혼자 걷기 좋은 날이에요</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400 ml-auto"></i>
+                        </div>
+                        <div class="flex items-center p-3 bg-orange-50 rounded-lg clickable-recommendation" onclick="showAttractions()">
+                            <i class="fas fa-map-marker-alt text-orange-500 text-xl mr-3"></i>
+                            <div>
+                                <p class="font-semibold">주변 가볼만한 장소 추천</p>
+                                <p class="text-sm text-gray-600">조용하고 혼자 있기 좋은 분위기</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400 ml-auto"></i>
+                        </div>
+                        <div class="flex items-center p-3 bg-purple-50 rounded-lg clickable-recommendation" onclick="showPhotoSpots()">
+                            <i class="fas fa-camera text-purple-500 text-xl mr-3"></i>
+                            <div>
+                                <p class="font-semibold">포토스팟 추천</p>
+                                <p class="text-sm text-gray-600">혼자 사진 찍기 좋은 명소 5곳</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400 ml-auto"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">빠른 접근</h3>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button class="flex flex-col items-center p-3 bg-gray-50 rounded-lg" onclick="switchTab('search')">
+                            <i class="fas fa-map-marker-alt text-blue-500 text-xl mb-1"></i>
+                            <span class="text-xs font-medium">근처 맛집</span>
+                        </button>
+                        <button class="flex flex-col items-center p-3 bg-gray-50 rounded-lg" onclick="switchTab('accommodation')">
+                            <i class="fas fa-bed text-green-500 text-xl mb-1"></i>
+                            <span class="text-xs font-medium">숙소 찾기</span>
+                        </button>
+                        <button class="flex flex-col items-center p-3 bg-gray-50 rounded-lg" onclick="showRouteModal()">
+                            <i class="fas fa-route text-purple-500 text-xl mb-1"></i>
+                            <span class="text-xs font-medium">안전 경로</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Walking Routes Screen -->
+        <div id="walkingRoutes" class="screen">
+            <div class="p-4">
+                <button class="back-button" onclick="switchTab('home')">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    홈으로 돌아가기
+                </button>
+                
+                <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-xl font-bold">산책 코스 추천</h1>
+                    <span class="text-sm text-gray-500">총 8개 코스</span>
+                </div>
+
+                <div class="mb-4">
+                    <div class="flex flex-wrap gap-2">
+                        <div class="filter-chip active">전체</div>
+                        <div class="filter-chip">쉬움</div>
+                        <div class="filter-chip">보통</div>
+                        <div class="filter-chip">어려움</div>
+                        <div class="filter-chip">야경 코스</div>
+                    </div>
+                </div>
+
+                <!-- Walking Route Cards -->
+                <div class="recommendation-card" onclick="showRouteToPlace('해운대 해변 산책로')">
+                    <div class="recommendation-image">
+                        <i class="fas fa-water"></i>
+                    </div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">해운대 해변 산책로</h3>
+                        <div class="safety-indicator">
+                            <i class="fas fa-shield-alt mr-1 text-xs"></i>
+                            안전
+                        </div>
+                    </div>
+                    <div class="flex items-center mb-2">
+                        <div class="difficulty-badge difficulty-easy mr-2">
+                            <i class="fas fa-leaf mr-1"></i>
+                            쉬움
+                        </div>
+                        <div class="rating-stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                            <span class="text-sm text-gray-600 ml-1">4.8 (124명)</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">바다를 보며 걷는 평탄한 코스. 혼자 걸으며 생각 정리하기 좋아요.</p>
+                    <div class="flex justify-between text-sm text-gray-500">
+                        <span><i class="fas fa-route mr-1"></i>2.5km</span>
+                        <span><i class="fas fa-clock mr-1"></i>30분</span>
+                        <span><i class="fas fa-walking mr-1"></i>도보 3분</span>
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                        <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">바다 전망</span>
+                        <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">평탄한 길</span>
+                        <span class="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">야경 명소</span>
+                    </div>
+                </div>
+
+                <div class="recommendation-card" onclick="showRouteToPlace('동백섬 둘레길')">
+                    <div class="recommendation-image">
+                        <i class="fas fa-tree"></i>
+                    </div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">동백섬 둘레길</h3>
+                        <div class="safety-indicator">
+                            <i class="fas fa-shield-alt mr-1 text-xs"></i>
+                            안전
+                        </div>
+                    </div>
+                    <div class="flex items-center mb-2">
+                        <div class="difficulty-badge difficulty-medium mr-2">
+                            <i class="fas fa-mountain mr-1"></i>
+                            보통
+                        </div>
+                        <div class="rating-stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <span class="text-sm text-gray-600 ml-1">4.3 (89명)</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">자연 속에서 조용히 걸을 수 있는 숲길. 사색하기 좋은 코스입니다.</p>
+                    <div class="flex justify-between text-sm text-gray-500">
+                        <span><i class="fas fa-route mr-1"></i>1.8km</span>
+                        <span><i class="fas fa-clock mr-1"></i>25분</span>
+                        <span><i class="fas fa-walking mr-1"></i>도보 8분</span>
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                        <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">자연 경관</span>
+                        <span class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded">약간의 경사</span>
+                        <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">조용한 분위기</span>
+                    </div>
+                </div>
+
+                <div class="recommendation-card" onclick="showRouteToPlace('광안대교 야경 코스')">
+                    <div class="recommendation-image">
+                        <i class="fas fa-bridge"></i>
+                    </div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">광안대교 야경 코스</h3>
+                        <div class="safety-indicator warning">
+                            <i class="fas fa-exclamation-triangle mr-1 text-xs"></i>
+                            보통
+                        </div>
+                    </div>
+                    <div class="flex items-center mb-2">
+                        <div class="difficulty-badge difficulty-easy mr-2">
+                            <i class="fas fa-leaf mr-1"></i>
+                            쉬움
+                        </div>
+                        <div class="rating-stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <span class="text-sm text-gray-600 ml-1">4.9 (156명)</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">광안대교의 아름다운 야경을 감상하며 걷는 로맨틱한 코스입니다.</p>
+                    <div class="flex justify-between text-sm text-gray-500">
+                        <span><i class="fas fa-route mr-1"></i>3.2km</span>
+                        <span><i class="fas fa-clock mr-1"></i>40분</span>
+                        <span><i class="fas fa-walking mr-1"></i>도보 12분</span>
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                        <span class="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">야경 명소</span>
+                        <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">도시 전망</span>
+                        <span class="text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded">저녁 추천</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attractions Screen -->
+        <div id="attractions" class="screen">
+            <div class="p-4">
+                <button class="back-button" onclick="switchTab('home')">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    홈으로 돌아가기
+                </button>
+                
+                <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-xl font-bold">가볼만한 장소</h1>
+                    <span class="text-sm text-gray-500">총 12곳</span>
+                </div>
+
+                <div class="mb-4">
+                    <div class="flex flex-wrap gap-2">
+                        <div class="filter-chip active">전체</div>
+                        <div class="filter-chip">문화시설</div>
+                        <div class="filter-chip">자연 명소</div>
+                        <div class="filter-chip">조용한 곳</div>
+                        <div class="filter-chip">실내</div>
+                    </div>
+                </div>
+
+                <!-- Attraction Cards -->
+                <div class="recommendation-card" onclick="showRouteToPlace('부산 시립미술관')">
+                    <div class="recommendation-image">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">부산 시립미술관</h3>
+                        <div class="safety-indicator">
+                            <i class="fas fa-shield-alt mr-1 text-xs"></i>
+                            안전
+                        </div>
+                    </div>
+                    <div class="rating-stars mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <span class="text-sm text-gray-600 ml-1">4.6 (혼행 리뷰 67개)</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">조용히 예술 작품을 감상하며 혼자만의 시간을 보낼 수 있는 공간입니다.</p>
+                    <div class="flex justify-between text-sm text-gray-500 mb-2">
+                        <span><i class="fas fa-walking mr-1"></i>도보 15분</span>
+                        <span><i class="fas fa-clock mr-1"></i>10:00-18:00</span>
+                        <span><i class="fas fa-won-sign mr-1"></i>무료</span>
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                        <span class="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">문화시설</span>
+                        <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">실내</span>
+                        <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">조용한 분위기</span>
+                    </div>
+                </div>
+
+                <div class="recommendation-card" onclick="showRouteToPlace('태종대 자연공원')">
+                    <div class="recommendation-image">
+                        <i class="fas fa-mountain"></i>
+                    </div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">태종대 자연공원</h3>
+                        <div class="safety-indicator">
+                            <i class="fas fa-shield-alt mr-1 text-xs"></i>
+                            안전
+                        </div>
+                    </div>
+                    <div class="rating-stars mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <span class="text-sm text-gray-600 ml-1">4.4 (혼행 리뷰 92개)</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">바다와 절벽의 절경을 혼자 감상하며 자연 속에서 힐링할 수 있어요.</p>
+                    <div class="flex justify-between text-sm text-gray-500 mb-2">
+                        <span><i class="fas fa-bus mr-1"></i>버스 25분</span>
+                        <span><i class="fas fa-clock mr-1"></i>05:00-24:00</span>
+                        <span><i class="fas fa-won-sign mr-1"></i>무료</span>
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                        <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">자연 명소</span>
+                        <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">바다 전망</span>
+                        <span class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded">사진명소</span>
+                    </div>
+                </div>
+
+                <div class="recommendation-card" onclick="showRouteToPlace('부산 도서관')">
+                    <div class="recommendation-image">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">부산 도서관</h3>
+                        <div class="safety-indicator">
+                            <i class="fas fa-shield-alt mr-1 text-xs"></i>
+                            안전
+                        </div>
+                    </div>
+                    <div class="rating-stars mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <span class="text-sm text-gray-600 ml-1">4.8 (혼행 리뷰 43개)</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">조용한 분위기에서 독서나 공부를 하며 혼자만의 시간을 보내기 좋아요.</p>
+                    <div class="flex justify-between text-sm text-gray-500 mb-2">
+                        <span><i class="fas fa-walking mr-1"></i>도보 10분</span>
+                        <span><i class="fas fa-clock mr-1"></i>09:00-22:00</span>
+                        <span><i class="fas fa-won-sign mr-1"></i>무료</span>
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                        <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">실내</span>
+                        <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">조용한 분위기</span>
+                        <span class="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">문화시설</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photo Spots Screen -->
+        <div id="photoSpots" class="screen">
+            <div class="p-4">
+                <button class="back-button" onclick="switchTab('home')">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    홈으로 돌아가기
+                </button>
+                
+                <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-xl font-bold">포토스팟 추천</h1>
+                    <span class="text-sm text-gray-500">총 15곳</span>
+                </div>
+
+                <div class="mb-4">
+                    <div class="flex flex-wrap gap-2">
+                        <div class="filter-chip active">전체</div>
+                        <div class="filter-chip">야경</div>
+                        <div class="filter-chip">자연</div>
+                        <div class="filter-chip">건축물</div>
+                        <div class="filter-chip">셀카 명소</div>
+                    </div>
+                </div>
+
+                <!-- Photo Spot Cards -->
+                <div class="recommendation-card" onclick="showRouteToPlace('감천문화마을')">
+                    <div class="recommendation-image">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">감천문화마을</h3>
+                        <div class="safety-indicator">
+                            <i class="fas fa-shield-alt mr-1 text-xs"></i>
+                            안전
+                        </div>
+                    </div>
+                    <div class="rating-stars mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <span class="text-sm text-gray-600 ml-1">4.7 (혼행 사진 234개)</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">알록달록한 집들과 골목길이 인스타그램 감성 사진 찍기에 완벽해요.</p>
+                    <div class="flex justify-between text-sm text-gray-500 mb-2">
+                        <span><i class="fas fa-bus mr-1"></i>버스 20분</span>
+                        <span><i class="fas fa-clock mr-1"></i>09:00-18:00</span>
+                        <span><i class="fas fa-camera mr-1"></i>포토존 5곳</span>
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                        <span class="text-xs bg-pink-100 text-pink-600 px-2 py-1 rounded">인스타 명소</span>
+                        <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">건축물</span>
+                        <span class="text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded">컬러풀</span>
+                    </div>
+                </div>
+
+                <div class="recommendation-card" onclick="showRouteToPlace('해운대 블루라인파크')">
+                    <div class="recommendation-image">
+                        <i class="fas fa-train"></i>
+                    </div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">해운대 블루라인파크</h3>
+                        <div class="safety-indicator">
+                            <i class="fas fa-shield-alt mr-1 text-xs"></i>
+                            안전
+                        </div>
+                    </div>
+                    <div class="rating-stars mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <span class="text-sm text-gray-600 ml-1">4.9 (혼행 사진 189개)</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">바다 위를 달리는 스카이캡슐에서 찍는 셀카는 정말 특별해요.</p>
+                    <div class="flex justify-between text-sm text-gray-500 mb-2">
+                        <span><i class="fas fa-walking mr-1"></i>도보 5분</span>
+                        <span><i class="fas fa-clock mr-1"></i>09:00-22:00</span>
+                        <span><i class="fas fa-camera mr-1"></i>포토존 3곳</span>
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                        <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">바다 전망</span>
+                        <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">셀카 명소</span>
+                        <span class="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">독특한 경험</span>
+                    </div>
+                </div>
+
+                <div class="recommendation-card" onclick="showRouteToPlace('광안리 해변')">
+                    <div class="recommendation-image">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">광안리 해변 야경</h3>
+                        <div class="safety-indicator warning">
+                            <i class="fas fa-exclamation-triangle mr-1 text-xs"></i>
+                            보통
+                        </div>
+                    </div>
+                    <div class="rating-stars mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <span class="text-sm text-gray-600 ml-1">4.8 (혼행 사진 312개)</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">광안대교와 함께 찍는 야경 사진은 부산 여행의 필수 인증샷이에요.</p>
+                    <div class="flex justify-between text-sm text-gray-500 mb-2">
+                        <span><i class="fas fa-walking mr-1"></i>도보 12분</span>
+                        <span><i class="fas fa-clock mr-1"></i>24시간</span>
+                        <span><i class="fas fa-camera mr-1"></i>포토존 4곳</span>
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                        <span class="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">야경 명소</span>
+                        <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">바다 전망</span>
+                        <span class="text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded">저녁 추천</span>
+                    </div>
+                </div>
+
+                <div class="recommendation-card" onclick="showRouteToPlace('송도 구름산책로')">
+                    <div class="recommendation-image">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg">송도 구름산책로</h3>
+                        <div class="safety-indicator">
+                            <i class="fas fa-shield-alt mr-1 text-xs"></i>
+                            안전
+                        </div>
+                    </div>
+                    <div class="rating-stars mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <span class="text-sm text-gray-600 ml-1">4.2 (혼행 사진 156개)</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">바다 위에 떠 있는 듯한 구름다리에서 찍는 사진이 인상적이에요.</p>
+                    <div class="flex justify-between text-sm text-gray-500 mb-2">
+                        <span><i class="fas fa-bus mr-1"></i>버스 30분</span>
+                        <span><i class="fas fa-clock mr-1"></i>09:00-18:00</span>
+                        <span><i class="fas fa-camera mr-1"></i>포토존 2곳</span>
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                        <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">바다 전망</span>
+                        <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">자연</span>
+                        <span class="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">독특한 경험</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Screen -->
+        <div id="map" class="screen">
+            <div class="p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-xl font-bold">지도</h1>
+                    <button class="btn-primary text-sm px-3 py-2" onclick="showRouteModal()">
+                        <i class="fas fa-route mr-1"></i>경로 찾기
+                    </button>
+                </div>
+
+                <!-- Map Toggle -->
+                <div class="map-toggle">
+                    <button class="active" onclick="switchMapMode('safety')">안전 지도</button>
+                    <button onclick="switchMapMode('convenience')">편의시설 지도</button>
+                </div>
+
+                <!-- Safety Map -->
+                <div id="safetyMap" class="map-view active">
+                    <div class="map-container">
+                        <div class="text-center text-gray-500">
+                            <i class="fas fa-shield-alt text-4xl mb-2"></i>
+                            <p>안전 지도</p>
+                            <p class="text-sm">CCTV, 경찰서, 가로등, 병원 위치</p>
+                        </div>
+                        <!-- Safety Map Markers -->
+                        <div class="map-marker cctv" style="top: 15%; left: 25%;" title="CCTV">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <div class="map-marker cctv" style="top: 35%; right: 30%;">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <div class="map-marker police" style="top: 45%; left: 15%;" title="경찰서">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="map-marker light" style="bottom: 25%; right: 20%;" title="가로등">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <div class="map-marker light" style="top: 60%; left: 45%;">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <div class="map-marker cctv" style="bottom: 35%; left: 35%;">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <!-- 병원 마커 추가 (위치는 임의, 조정 가능) -->
+                        <div class="map-marker medical" style="top: 60%; left: 60%;" title="병원">
+                            <i class="fas fa-hospital"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <div class="filter-chip active">
+                            <i class="fas fa-video mr-1"></i>CCTV
+                        </div>
+                        <div class="filter-chip active">
+                            <i class="fas fa-shield-alt mr-1"></i>경찰서
+                        </div>
+                        <div class="filter-chip active">
+                            <i class="fas fa-lightbulb mr-1"></i>가로등
+                        </div>
+                        <!-- 병원 필터칩 추가 -->
+                        <div class="filter-chip active">
+                            <i class="fas fa-hospital mr-1"></i>병원
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="font-bold mb-2">안전도 범례</h3>
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-blue-500 rounded mr-2"></div>
+                                <span class="text-sm">CCTV 설치 구역</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-green-500 rounded mr-2"></div>
+                                <span class="text-sm">경찰서/파출소</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-yellow-500 rounded mr-2"></div>
+                                <span class="text-sm">가로등 설치 구역</span>
+                            </div>
+                            <!-- 병원 범례 추가 -->
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-red-500 rounded mr-2"></div>
+                                <span class="text-sm">병원</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Convenience Map -->
+                <div id="convenienceMap" class="map-view" style="display: none;">
+                    <div class="map-container">
+                        <div class="text-center text-gray-500">
+                            <i class="fas fa-store text-4xl mb-2"></i>
+                            <p>편의시설 지도</p>
+                            <p class="text-sm">화장실, 편의점, 약국, 물품보관함 위치</p>
+                        </div>
+                        <!-- Convenience Map Markers -->
+                        <div class="map-marker convenience" style="top: 20%; left: 30%;" title="편의점">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div class="map-marker toilet" style="top: 40%; right: 25%;" title="공중화장실">
+                            <i class="fas fa-restroom"></i>
+                        </div>
+                        <div class="map-marker hospital" style="top: 50%; left: 20%;" title="약국">
+                            <i class="fas fa-pills"></i>
+                        </div>
+                        <div class="map-marker convenience" style="bottom: 30%; right: 35%;">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div class="map-marker toilet" style="top: 65%; left: 50%;">
+                            <i class="fas fa-restroom"></i>
+                        </div>
+                        <div class="map-marker hospital" style="bottom: 40%; left: 40%;">
+                            <i class="fas fa-pills"></i>
+                        </div>
+                        <!-- 물품보관함 마커 추가 (위치는 임의, 조정 가능) -->
+                        <div class="map-marker locker" style="top: 55%; left: 75%;" title="물품보관함">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <div class="filter-chip active">
+                            <i class="fas fa-restroom mr-1"></i>화장실
+                        </div>
+                        <div class="filter-chip active">
+                            <i class="fas fa-store mr-1"></i>편의점
+                        </div>
+                        <div class="filter-chip active">
+                            <i class="fas fa-pills mr-1"></i>약국
+                        </div>
+                        <!-- 물품보관함 필터칩 추가 -->
+                        <div class="filter-chip active">
+                            <i class="fas fa-box-open mr-1"></i>물품보관함
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="font-bold mb-2">편의시설 범례</h3>
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-cyan-500 rounded mr-2"></div>
+                                <span class="text-sm">공중화장실</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-purple-500 rounded mr-2"></div>
+                                <span class="text-sm">편의점</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-red-500 rounded mr-2"></div>
+                                <span class="text-sm">약국</span>
+                            </div>
+                            <!-- 물품보관함 범례 추가 -->
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-gray-700 rounded mr-2"></div>
+                                <span class="text-sm">물품보관함</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Screen -->
+        <div id="search" class="screen">
+            <div class="p-4">
+                <div class="mb-4">
+                    <input type="text" class="search-bar" placeholder="맛집, 카페를 검색해보세요" id="searchInput">
+                </div>
+
+                <div class="mb-4">
+                    <h3 class="font-bold mb-2">필터</h3>
+                    <div class="flex flex-wrap">
+                        <div class="filter-chip active" data-filter="solo">1인 친화적</div>
+                        <div class="filter-chip" data-filter="24hours">24시간 운영</div>
+                        <div class="filter-chip" data-filter="quiet">조용한 분위기</div>
+                        <div class="filter-chip" data-filter="counter">카운터석</div>
+                        <div class="filter-chip" data-filter="safety">안전도 높음</div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold">검색 결과</h3>
+                        <span class="text-sm text-gray-500">총 12곳</span>
+                    </div>
+                </div>
+
+                <!-- Restaurant Cards -->
+                <div class="place-card" onclick="showRouteToPlace('조용한 북카페')">
+                    <div class="place-image">
+                        <i class="fas fa-coffee"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-1">
+                            <h4 class="font-bold">조용한 북카페</h4>
+                            <div class="safety-indicator">
+                                <i class="fas fa-shield-alt mr-1 text-xs"></i>
+                                안전
+                            </div>
+                        </div>
+                        <div class="rating-stars mb-1">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                            <span class="text-sm text-gray-600 ml-1">4.5 (혼행 리뷰 32개)</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">"혼자 책 읽기 딱 좋은 조용한 분위기"</p>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span><i class="fas fa-walking mr-1"></i>도보 5분</span>
+                            <span><i class="fas fa-clock mr-1"></i>09:00-22:00</span>
+                        </div>
+                        <div class="flex gap-1 mt-2">
+                            <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">1인 친화적</span>
+                            <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">조용한 분위기</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="place-card" onclick="showRouteToPlace('혼밥 전문 식당')">
+                    <div class="place-image">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-1">
+                            <h4 class="font-bold">혼밥 전문 식당</h4>
+                            <div class="safety-indicator">
+                                <i class="fas fa-shield-alt mr-1 text-xs"></i>
+                                안전
+                            </div>
+                        </div>
+                        <div class="rating-stars mb-1">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <span class="text-sm text-gray-600 ml-1">4.2 (혼행 리뷰 28개)</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">"카운터석이 편하고 혼자 와도 부담없어요"</p>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span><i class="fas fa-walking mr-1"></i>도보 3분</span>
+                            <span><i class="fas fa-clock mr-1"></i>11:00-21:00</span>
+                        </div>
+                        <div class="flex gap-1 mt-2">
+                            <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">1인 친화적</span>
+                            <span class="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">카운터석</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="place-card" onclick="showRouteToPlace('24시간 카페')">
+                    <div class="place-image">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-1">
+                            <h4 class="font-bold">24시간 카페</h4>
+                            <div class="safety-indicator warning">
+                                <i class="fas fa-exclamation-triangle mr-1 text-xs"></i>
+                                보통
+                            </div>
+                        </div>
+                        <div class="rating-stars mb-1">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <span class="text-sm text-gray-600 ml-1">4.7 (혼행 리뷰 56개)</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">"밤늦게도 안전하게 이용할 수 있어요"</p>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span><i class="fas fa-walking mr-1"></i>도보 7분</span>
+                            <span><i class="fas fa-clock mr-1"></i>24시간</span>
+                        </div>
+                        <div class="flex gap-1 mt-2">
+                            <span class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded">24시간 운영</span>
+                            <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">1인 친화적</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="place-card" onclick="showRouteToPlace('조용한 브런치 카페')">
+                    <div class="place-image">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-1">
+                            <h4 class="font-bold">조용한 브런치 카페</h4>
+                            <div class="safety-indicator">
+                                <i class="fas fa-shield-alt mr-1 text-xs"></i>
+                                안전
+                            </div>
+                        </div>
+                        <div class="rating-stars mb-1">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <span class="text-sm text-gray-600 ml-1">4.1 (혼행 리뷰 19개)</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">"혼자 브런치 먹기 좋은 아늑한 공간"</p>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span><i class="fas fa-walking mr-1"></i>도보 8분</span>
+                            <span><i class="fas fa-clock mr-1"></i>08:00-18:00</span>
+                        </div>
+                        <div class="flex gap-1 mt-2">
+                            <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">조용한 분위기</span>
+                            <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">1인 친화적</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accommodation Screen (기존 Booking Screen 대체) -->
+        <div id="accommodation" class="screen">
+            <div class="p-4">
+                <h1 class="text-xl font-bold mb-4">혼행족 부산 추천 숙소</h1>
+
+                <!-- 숙소 유형 탭 -->
+                <div class="accommodation-tabs">
+                    <button class="accommodation-tab active" onclick="switchAccommodationType('all')">전체</button>
+                    <button class="accommodation-tab" onclick="switchAccommodationType('hotel')">호텔</button>
+                    <button class="accommodation-tab" onclick="switchAccommodationType('guesthouse')">게스트하우스</button>
+                    <button class="accommodation-tab" onclick="switchAccommodationType('pension')">팬션</button>
+                </div>
+
+                <!-- 해시태그 필터 -->
+                <div class="mb-4">
+                    <div class="flex flex-wrap gap-2">
+                        <div class="filter-chip active">1인 전용 숙소</div>
+                        <div class="filter-chip">여성 전용</div>
+                        <div class="filter-chip">안전도 높음</div>
+                        <div class="filter-chip">감성숙소</div>
+                        <div class="filter-chip">금연</div>
+                        <div class="filter-chip">짐보관 가능</div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-sm text-gray-600">혼행족 추천 숙소 총 8곳</span>
+                    <select class="text-sm border border-gray-300 rounded px-2 py-1">
+                        <option>추천순</option>
+                        <option>평점순</option>
+                        <option>가격 낮은순</option>
+                        <option>가격 높은순</option>
+                    </select>
+                </div>
+
+                <!-- 숙소 카드들 -->
+                <div class="accommodation-card" onclick="showAccommodationDetail('해운대 1인 전용 호텔')">
+                    <div class="accommodation-image">
+                        <i class="fas fa-bed"></i>
+                        <div class="accommodation-badge">호텔</div>
+                    </div>
+                    <div class="accommodation-info">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="font-bold text-lg">해운대 1인 전용 호텔</h3>
+                                <p class="text-sm text-gray-600">부산 해운대구 · 해변 도보 2분</p>
+                            </div>
+                            <div class="safety-indicator">
+                                <i class="fas fa-shield-alt mr-1 text-xs"></i>
+                                안전
+                            </div>
+                        </div>
+                        
+                        <div class="rating-stars mb-2">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="far fa-star"></i>
+                        </div>
+
+                        <div class="accommodation-features">
+                            <div class="feature-icon">
+                                <i class="fas fa-door-open text-blue-500"></i>
+                                <span>독립 출입구</span>
+                            </div>
+                            <div class="feature-icon">
+                                <i class="fas fa-clock text-green-500"></i>
+                                <span>24시간 프런트</span>
+                            </div>
+                            <div class="feature-icon">
+                                <i class="fas fa-video text-purple-500"></i>
+                                <span>CCTV 완비</span>
+                            </div>
+                        </div>
+
+                        <div class="accommodation-tags">
+                            <span class="accommodation-tag highlight">1인 전용 숙소</span>
+                            <span class="accommodation-tag highlight">안전도 높음</span>
+                            <span class="accommodation-tag">금연</span>
+                            <span class="accommodation-tag">짐보관 가능</span>
+                        </div>
+
+                        <p class="text-sm text-gray-600 mb-3">"혼자 여행하기에 완벽한 시설과 위치. 직원분들도 친절하고 안전해요."</p>
+
+                        <div class="price-info">
+                            <div>
+                                <span class="text-2xl font-bold text-blue-600">89,000원</span>
+                                <span class="text-sm text-gray-500">/박</span>
+                            </div>
+                            <button class="btn-primary text-sm px-4 py-2">자세히 보기</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accommodation-card" onclick="showAccommodationDetail('조용한 여성 전용 게스트하우스')">
+                    <div class="accommodation-image">
+                        <i class="fas fa-home"></i>
+                        <div class="accommodation-badge">게스트하우스</div>
+                    </div>
+                    <div class="accommodation-info">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="font-bold text-lg">조용한 여성 전용 게스트하우스</h3>
+                                <p class="text-sm text-gray-600">부산 중구 · 지하철역 도보 5분</p>
+                            </div>
+                            <div class="safety-indicator">
+                                <i class="fas fa-shield-alt mr-1 text-xs"></i>
+                                안전
+                            </div>
+                        </div>
+                        
+                        <div class="rating-stars mb-2">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+
+                        <div class="accommodation-features">
+                            <div class="feature-icon">
+                                <i class="fas fa-female text-pink-500"></i>
+                                <span>여성 전용</span>
+                            </div>
+                            <div class="feature-icon">
+                                <i class="fas fa-volume-mute text-green-500"></i>
+                                <span>조용한 환경</span>
+                            </div>
+                            <div class="feature-icon">
+                                <i class="fas fa-users text-blue-500"></i>
+                                <span>커뮤니티 공간</span>
+                            </div>
+                        </div>
+
+                        <div class="accommodation-tags">
+                            <span class="accommodation-tag highlight">여성 전용</span>
+                            <span class="accommodation-tag highlight">안전도 높음</span>
+                            <span class="accommodation-tag highlight">감성숙소</span>
+                            <span class="accommodation-tag">금연</span>
+                        </div>
+
+                        <p class="text-sm text-gray-600 mb-3">"여성 혼자 여행하기에 정말 안전하고 편안한 곳. 다른 혼행족들과 소통도 가능해요."</p>
+
+                        <div class="price-info">
+                            <div>
+                                <span class="text-2xl font-bold text-blue-600">45,000원</span>
+                                <span class="text-sm text-gray-500">/박</span>
+                            </div>
+                            <button class="btn-primary text-sm px-4 py-2">자세히 보기</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accommodation-card" onclick="showAccommodationDetail('바다뷰 감성 팬션')">
+                    <div class="accommodation-image">
+                        <i class="fas fa-mountain"></i>
+                        <div class="accommodation-badge">팬션</div>
+                    </div>
+                    <div class="accommodation-info">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="font-bold text-lg">바다뷰 감성 팬션</h3>
+                                <p class="text-sm text-gray-600">부산 기장군 · 해변 도보 1분</p>
+                            </div>
+                            <div class="safety-indicator">
+                                <i class="fas fa-shield-alt mr-1 text-xs"></i>
+                                안전
+                            </div>
+                        </div>
+                        
+                        <div class="rating-stars mb-2">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+
+                        <div class="accommodation-features">
+                            <div class="feature-icon">
+                                <i class="fas fa-water text-blue-500"></i>
+                                <span>바다뷰</span>
+                            </div>
+                            <div class="feature-icon">
+                                <i class="fas fa-camera text-purple-500"></i>
+                                <span>포토스팟</span>
+                            </div>
+                            <div class="feature-icon">
+                                <i class="fas fa-car text-gray-500"></i>
+                                <span>주차 가능</span>
+                            </div>
+                        </div>
+
+                        <div class="accommodation-tags">
+                            <span class="accommodation-tag highlight">감성숙소</span>
+                            <span class="accommodation-tag highlight">1인 전용 숙소</span>
+                            <span class="accommodation-tag">금연</span>
+                            <span class="accommodation-tag">짐보관 가능</span>
+                        </div>
+
+                        <p class="text-sm text-gray-600 mb-3">"바다를 보며 혼자만의 힐링 시간을 보낼 수 있는 완벽한 장소예요."</p>
+
+                        <div class="price-info">
+                            <div>
+                                <span class="text-2xl font-bold text-blue-600">120,000원</span>
+                                <span class="text-sm text-gray-500">/박</span>
+                            </div>
+                            <button class="btn-primary text-sm px-4 py-2">자세히 보기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Screen (새로 추가) -->
+        <div id="navigation" class="screen navigation-screen">
+            <div class="navigation-header">
+                <button onclick="endNavigation()" class="text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                <div class="text-center">
+                    <div class="text-lg font-bold">조용한 북카페</div>
+                    <div class="text-sm opacity-75">안전 경로로 안내 중</div>
+                </div>
+                <button onclick="toggleNavigationSettings()" class="text-white">
+                    <i class="fas fa-cog text-xl"></i>
+                </button>
+            </div>
+
+            <div class="navigation-map">
+                <div class="text-center text-white opacity-50">
+                    <i class="fas fa-map text-6xl mb-4"></i>
+                    <p class="text-lg font-bold">실시간 경로 안내</p>
+                    <p class="text-sm">GPS 위치 기반 네비게이션</p>
+                </div>
+                
+                <!-- 경로 라인 -->
+                <div class="route-line" style="top: 30%; left: 20%; height: 40%; transform: rotate(45deg);"></div>
+                <div class="route-line" style="top: 50%; left: 40%; width: 30%; height: 4px;"></div>
+                
+                <!-- 현재 위치 -->
+                <div class="current-location" style="top: 30%; left: 20%;"></div>
+                
+                <!-- 목적지 마커 -->
+                <div class="destination-marker" style="top: 50%; right: 25%;">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+
+                <!-- 안전시설 마커들 -->
+                <div class="map-marker cctv" style="top: 35%; left: 30%;" title="CCTV">
+                    <i class="fas fa-video"></i>
+                </div>
+                <div class="map-marker light" style="top: 45%; left: 50%;" title="가로등">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+            </div>
+
+            <div class="navigation-info">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600">150m</div>
+                        <div class="text-sm text-gray-600">남은 거리</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600">2분</div>
+                        <div class="text-sm text-gray-600">예상 시간</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-purple-600">92%</div>
+                        <div class="text-sm text-gray-600">안전도</div>
+                    </div>
+                </div>
+
+                <div class="direction-card">
+                    <div class="flex items-center">
+                        <div class="direction-icon">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-lg">직진 후 우회전</div>
+                            <div class="text-sm text-gray-600">50m 직진 후 해운대로에서 우회전하세요</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="safety-alerts">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-shield-alt text-green-600 mr-2"></i>
+                        <span class="font-bold text-green-800">안전 구간</span>
+                    </div>
+                    <div class="text-sm text-green-700">
+                        • CCTV 2대 운영 중<br>
+                        • 가로등 충분히 밝음<br>
+                        • 보행자 통행량 많음
+                    </div>
+                </div>
+
+                <!-- 단계별 경로 안내 -->
+                <div class="mt-4">
+                    <h4 class="font-bold mb-2">경로 안내</h4>
+                    <div class="space-y-2">
+                        <div class="step-indicator">
+                            <div class="step-number step-completed">1</div>
+                            <span class="text-sm text-gray-500 line-through">현재 위치에서 출발</span>
+                        </div>
+                        <div class="step-indicator">
+                            <div class="step-number step-current">2</div>
+                            <span class="text-sm font-medium">50m 직진 후 우회전</span>
+                        </div>
+                        <div class="step-indicator">
+                            <div class="step-number">3</div>
+                            <span class="text-sm text-gray-600">해운대로를 따라 100m 직진</span>
+                        </div>
+                        <div class="step-indicator">
+                            <div class="step-number">4</div>
+                            <span class="text-sm text-gray-600">목적지 도착</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="navigation-controls">
+                    <button class="nav-btn nav-btn-secondary" onclick="showRouteOptions()">
+                        <i class="fas fa-route mr-2"></i>
+                        경로 변경
+                    </button>
+                    <button class="nav-btn nav-btn-primary" onclick="callEmergency()">
+                        <i class="fas fa-phone mr-2"></i>
+                        긴급 신고
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Arrival Screen (새로 추가) -->
+        <div id="arrival" class="screen arrival-screen" style="display: none;">
+            <div class="arrival-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h1 class="text-3xl font-bold mb-4">목적지에 도착했습니다!</h1>
+            <h2 class="text-xl mb-6">조용한 북카페</h2>
+            
+            <div class="bg-white bg-opacity-20 rounded-lg p-6 mb-8">
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold">850m</div>
+                        <div class="text-sm opacity-75">총 거리</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold">12분</div>
+                        <div class="text-sm opacity-75">소요 시간</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold">92%</div>
+                        <div class="text-sm opacity-75">안전도</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <button class="w-full bg-white text-green-600 py-3 px-6 rounded-lg font-bold text-lg" onclick="rateTrip()">
+                    <i class="fas fa-star mr-2"></i>
+                    여행 평가하기
+                </button>
+                <button class="w-full bg-white bg-opacity-20 text-white py-3 px-6 rounded-lg font-bold" onclick="shareTrip()">
+                    <i class="fas fa-share mr-2"></i>
+                    경험 공유하기
+                </button>
+                <button class="w-full bg-white bg-opacity-20 text-white py-3 px-6 rounded-lg font-bold" onclick="switchTab('home')">
+                    <i class="fas fa-home mr-2"></i>
+                    홈으로 돌아가기
+                </button>
+            </div>
+        </div>
+
+        <!-- Route Modal -->
+        <div id="routeModal" class="modal">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">경로 찾기</h2>
+                    <button onclick="hideRouteModal()" class="text-gray-500 text-xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-3 mb-4">
+                    <input type="text" class="route-input" placeholder="출발지" value="현재 위치">
+                    <input type="text" class="route-input" placeholder="목적지" id="destinationInput">
+                </div>
+
+                <button class="btn-primary w-full mb-4" onclick="findRoute()">경로 검색</button>
+
+                <div id="routeResults" style="display: none;">
+                    <h3 class="font-bold mb-3">추천 경로</h3>
+                    
+                    <div class="route-option safe selected" onclick="selectRoute(this)">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-bold text-green-600">
+                                    <i class="fas fa-shield-alt mr-1"></i>
+                                    안전 경로
+                                </h4>
+                                <p class="text-sm text-gray-600">CCTV와 가로등이 많은 길</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-bold">12분</div>
+                                <div class="text-sm text-gray-500">850m</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-video text-blue-500 mr-1"></i>
+                            <span class="mr-3">CCTV 8개</span>
+                            <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
+                            <span class="mr-3">가로등 15개</span>
+                            <i class="fas fa-shield-alt text-green-500 mr-1"></i>
+                            <span>안전도 92%</span>
+                        </div>
+                    </div>
+
+                    <div class="route-option fast" onclick="selectRoute(this)">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-bold text-orange-600">
+                                    <i class="fas fa-bolt mr-1"></i>
+                                    빠른 경로
+                                </h4>
+                                <p class="text-sm text-gray-600">최단 거리 경로</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-bold">8분</div>
+                                <div class="text-sm text-gray-500">620m</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-video text-blue-500 mr-1"></i>
+                            <span class="mr-3">CCTV 3개</span>
+                            <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
+                            <span class="mr-3">가로등 8개</span>
+                            <i class="fas fa-exclamation-triangle text-yellow-500 mr-1"></i>
+                            <span>안전도 74%</span>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-3 mt-4">
+                        <button class="btn-secondary flex-1" onclick="hideRouteModal()">취소</button>
+                        <button class="btn-primary flex-1" onclick="startNavigation()">길찾기 시작</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Button -->
+        <button class="emergency-btn" onclick="callEmergency()">
+            <i class="fas fa-exclamation"></i>
+        </button>
+
+        <!-- Tab Bar (예약 → 숙소로 변경) -->
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="switchTab('home')">
+                <i class="fas fa-home"></i>
+                <span>홈</span>
+            </div>
+            <div class="tab-item" onclick="switchTab('map')">
+                <i class="fas fa-map"></i>
+                <span>지도</span>
+            </div>
+            <div class="tab-item" onclick="switchTab('search')">
+                <i class="fas fa-search"></i>
+                <span>검색</span>
+            </div>
+            <div class="tab-item" onclick="switchTab('accommodation')">
+                <i class="fas fa-bed"></i>
+                <span>숙소</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Profile dropdown toggle
+        function toggleProfileDropdown() {
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('profileDropdown');
+            const profileBtn = document.querySelector('.profile-btn');
+            
+            if (!dropdown.contains(event.target) && !profileBtn.contains(event.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Profile menu functions
+        function showProfileEdit() {
+            alert('프로필 변경 페이지로 이동합니다.');
+            document.getElementById('profileDropdown').classList.remove('active');
+        }
+
+        function showPasswordChange() {
+            alert('비밀번호 변경 페이지로 이동합니다.');
+            document.getElementById('profileDropdown').classList.remove('active');
+        }
+
+        function showHelp() {
+            alert('도움말 페이지로 이동합니다.');
+            document.getElementById('profileDropdown').classList.remove('active');
+        }
+
+        function logout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                alert('로그아웃 되었습니다.');
+                document.getElementById('profileDropdown').classList.remove('active');
+            }
+        }
+
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Show selected screen
+            document.getElementById(tabName).classList.add('active');
+            
+            // Update tab active state
+            document.querySelectorAll('.tab-item').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Find and activate the correct tab
+            const tabs = document.querySelectorAll('.tab-item');
+            tabs.forEach(tab => {
+                if (tab.onclick && tab.onclick.toString().includes(tabName)) {
+                    tab.classList.add('active');
+                }
+            });
+
+            // Close profile dropdown when switching tabs
+            document.getElementById('profileDropdown').classList.remove('active');
+        }
+
+        // Recommendation page functions
+        function showWalkingRoutes() {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById('walkingRoutes').classList.add('active');
+            document.getElementById('profileDropdown').classList.remove('active');
+        }
+
+        function showAttractions() {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById('attractions').classList.add('active');
+            document.getElementById('profileDropdown').classList.remove('active');
+        }
+
+        function showPhotoSpots() {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById('photoSpots').classList.add('active');
+            document.getElementById('profileDropdown').classList.remove('active');
+        }
+
+        // Map mode switching
+        function switchMapMode(mode) {
+            // Update toggle buttons
+            document.querySelectorAll('.map-toggle button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // Show/hide map views
+            if (mode === 'safety') {
+                document.getElementById('safetyMap').style.display = 'block';
+                document.getElementById('convenienceMap').style.display = 'none';
+            } else {
+                document.getElementById('safetyMap').style.display = 'none';
+                document.getElementById('convenienceMap').style.display = 'block';
+            }
+        }
+
+        // Route modal functions
+        function showRouteModal() {
+            document.getElementById('routeModal').classList.add('active');
+            document.getElementById('profileDropdown').classList.remove('active');
+        }
+
+        function hideRouteModal() {
+            document.getElementById('routeModal').classList.remove('active');
+            document.getElementById('routeResults').style.display = 'none';
+        }
+
+        function findRoute() {
+            const destination = document.getElementById('destinationInput').value;
+            if (destination.trim()) {
+                document.getElementById('routeResults').style.display = 'block';
+            } else {
+                alert('목적지를 입력해주세요.');
+            }
+        }
+
+        function selectRoute(element) {
+            document.querySelectorAll('.route-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            element.classList.add('selected');
+        }
+
+        // Navigation functions (새로 추가)
+        function startNavigation() {
+            hideRouteModal();
+            
+            // Hide tab bar during navigation
+            document.querySelector('.tab-bar').style.display = 'none';
+            
+            // Show navigation screen
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById('navigation').classList.add('active');
+            
+            // Simulate arrival after 10 seconds for demo
+            setTimeout(() => {
+                showArrivalScreen();
+            }, 10000);
+        }
+
+        function endNavigation() {
+            // Show tab bar again
+            document.querySelector('.tab-bar').style.display = 'flex';
+            
+            // Return to previous screen
+            switchTab('map');
+        }
+
+        function showArrivalScreen() {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById('arrival').style.display = 'block';
+        }
+
+        function toggleNavigationSettings() {
+            alert('네비게이션 설정 메뉴입니다.');
+        }
+
+        function showRouteOptions() {
+            alert('경로 변경 옵션을 표시합니다.');
+        }
+
+        function callEmergency() {
+            if (confirm('긴급상황 신고를 하시겠습니까?\n112(경찰) 또는 119(소방서)로 연결됩니다.')) {
+                alert('긴급신고가 접수되었습니다.\n현재 위치가 자동으로 전송됩니다.');
+            }
+        }
+
+        function rateTrip() {
+            alert('여행 평가 페이지로 이동합니다.');
+            switchTab('home');
+        }
+
+        function shareTrip() {
+            alert('여행 경험을 공유합니다.');
+            switchTab('home');
+        }
+
+        function showRouteToPlace(placeName) {
+            document.getElementById('destinationInput').value = placeName;
+            showRouteModal();
+            setTimeout(() => {
+                findRoute();
+            }, 500);
+        }
+
+        // Accommodation functions
+        function switchAccommodationType(type) {
+            // Update tab active state
+            document.querySelectorAll('.accommodation-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // Filter accommodations based on type
+            // This would normally filter the accommodation cards
+            console.log('Filtering accommodations by type:', type);
+        }
+
+        function showAccommodationDetail(accommodationName) {
+            alert(`${accommodationName} 상세 정보 페이지로 이동합니다.`);
+        }
+
+        // Filter functionality
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                this.classList.toggle('active');
+                
+                // Filter search results based on active filters
+                if (this.closest('#search')) {
+                    filterSearchResults();
+                }
+            });
+        });
+
+        function filterSearchResults() {
+            const activeFilters = Array.from(document.querySelectorAll('#search .filter-chip.active'))
+                .map(chip => chip.dataset.filter || chip.textContent.trim());
+            
+            // This would normally filter the results
+            console.log('Active filters:', activeFilters);
+        }
+
+        // Search functionality
+        document.getElementById('searchInput')?.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            // This would normally filter results based on search query
+            console.log('Search query:', query);
+        });
+    </script>
+</body>
+</html>

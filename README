@@ -1,0 +1,80 @@
+# NaON (나온) 프로젝트
+
+NaON은 사용자에게 위치 기반 서비스와 여행 편의 기능을 제공하는 모바일 애플리케이션입니다. 날씨, 추천 장소, 안전 정보 등 다양한 기능을 통해 사용자 경험을 향상시키는 것을 목표로 합니다.
+
+## 🌟 주요 기능
+
+- **홈 화면**: 현재 위치의 날씨 정보, 맞춤형 장소 추천 등 핵심 정보를 한눈에 볼 수 있습니다.
+- **지도 서비스**: 안전 시설(경찰서, 소방서 등)과 편의 시설(화장실, 편의점 등)의 위치를 제공하는 지도 기능이 포함되어 있습니다.
+- **장소 검색 및 추천**: 관광 명소, 사진 찍기 좋은 곳, 산책로 등 다양한 테마의 장소를 검색하고 추천받을 수 있습니다.
+- **숙소 정보**: 여행자를 위한 숙소 정보를 제공하고 예약 관련 기능을 지원합니다.
+- **길찾기 및 도착 알림**: 목적지까지의 경로를 안내하고 도착 시 알림을 제공하는 내비게이션 기능이 있습니다.
+- **사용자 인증**: 회원가입, 로그인, 프로필 수정, 비밀번호 변경 등 안전한 사용자 계정 관리 기능을 제공합니다.
+
+## 📂 프로젝트 구조
+
+```
+NaON/
+├── naon_be/      # Spring Boot 기반의 백엔드 서버
+└── naon_fe/      # React Native 기반의 프론트엔드 애플리케이션
+```
+
+- **`naon_be`**: Java와 Spring Boot를 사용하여 API 서버를 구축합니다. 사용자 데이터 관리, 외부 API 연동(날씨 정보 등)을 담당합니다.
+- **`naon_fe`**: React Native를 사용하여 iOS 및 Android용 모바일 앱을 개발합니다. 사용자 인터페이스와 경험을 담당합니다.
+
+## 🛠️ 개발 환경
+
+| 구분 | 기술 스택 | 설명 |
+| :--- | :--- | :--- |
+| **Backend** | Java, Spring Boot | 비즈니스 로직 및 API 서버 |
+| | Gradle | 의존성 관리 및 빌드 도구 |
+| **Frontend**| React Native, TypeScript | iOS 및 Android 앱 개발 프레임워크 |
+| | Node.js, npm | JavaScript 런타임 및 패키지 매니저 |
+| **공통** | Git | 버전 관리 시스템 |
+
+## 🚀 시작하기
+
+### 1. 백엔드 서버 실행 (`naon_be`)
+
+1.  `naon_be` 디렉토리로 이동합니다.
+2.  프로젝트 의존성을 설치하고 빌드합니다.
+    ```bash
+    # Linux/macOS
+    ./gradlew build
+    
+    # Windows
+    .\gradlew.bat build
+    ```
+3.  Spring Boot 애플리케이션을 실행합니다. IDE(IntelliJ, Eclipse 등)에서 [`NaonApplication.java`](naon_be/src/main/java/com/naon/NaonApplication.java) 파일을 직접 실행하거나, 빌드된 jar 파일을 실행할 수 있습니다.
+
+### 2. 프론트엔드 앱 실행 (`naon_fe`)
+
+1.  `naon_fe` 디렉토리로 이동하여 의존성을 설치합니다.
+    ```bash
+    cd naon_fe
+    npm install
+    ```
+2.  Metro 번들러를 시작합니다.
+    ```bash
+    npm start
+    ```
+3.  새 터미널을 열고 플랫폼에 맞는 명령어를 실행하여 앱을 빌드하고 실행합니다.
+
+    - **Android**
+      ```bash
+      npm run android
+      ```
+
+    - **iOS**
+      ```bash
+      # CocoaPods 의존성 설치 (최초 1회 또는 네이티브 모듈 변경 시)
+      cd ios
+      bundle install
+      bundle exec pod install
+      cd ..
+
+      # 앱 실행
+      npm run ios
+      ```
+
+이제 에뮬레이터 또는 연결된 디바이스에서 NaON 앱이 실행되는 것을 확인할 수 있습니다.
